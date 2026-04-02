@@ -1,0 +1,12 @@
+{
+  "profiles": {
+    "signature-react-client": {
+      "commandName": "Executable",
+      "executablePath": "cmd",
+      "commandLineArgs": "/c npm run dev",
+      "workingDirectory": ".",
+      "launchBrowser": true,
+      "launchUrl": "http://localhost:5173"
+    }
+  }
+}
