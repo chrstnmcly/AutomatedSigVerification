@@ -10,6 +10,7 @@ import MainLayout from './components/layout/MainLayout'
 import Dashboard from './pages/Dashboard'
 import ErrorPage from './pages/ErrorPage'
 import SignatureIntake from './pages/SignatureIntake';
+import VerifySignaturePage from './pages/VerifySignaturePage';
 
 const App = () => {
     return (
@@ -30,6 +31,7 @@ const App = () => {
                         <Route element={<MainLayout />}>
                             <Route path="/dashboard" element={<Dashboard />} />
                             <Route path="/signature-intake" element={<SignatureIntake />} />
+                            <Route path="/verify-signature" element={<VerifySignaturePage />} />
                             <Route element={<ProtectedRoute allowedRoles={['Super Admin']} />}>
                                 <Route path="/admin" element={<Admin />} />
                             </Route>

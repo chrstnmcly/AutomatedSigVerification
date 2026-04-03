@@ -12,10 +12,12 @@ namespace IdentityService.Controllers
     public class UsersController : ControllerBase
     {
         private readonly IMongoCollection<User> _users;
+        private readonly IMongoCollection<AccountHolder> _accountsCollection;
 
         public UsersController(MongoDbContext context)
         {
             _users = context.GetCollection<User>("Users");
+            _accountsCollection = context.GetCollection<AccountHolder>("AccountHolders");
         }
 
         [HttpGet]
@@ -113,5 +115,33 @@ namespace IdentityService.Controllers
                 return StatusCode(500, new { message = "Error updating user status", error = ex.Message });
             }
         }
+
+        [HttpGet("search")]
+        public async Task<IActionResult> SearchAccountHolders([FromQuery] string query)
+        {
+            if (string.IsNullOrWhiteSpace(query))
+                return BadRequest(new { message = "Search query is required." });
+
+            try
+            {
+                var filterValue = new MongoDB.Bson.BsonRegularExpression(query, "i");
+
+                var filter = Builders<AccountHolder>.Filter.Or(
+                    Builders<AccountHolder>.Filter.Regex(a => a.FullName, filterValue),
+                    Builders<AccountHolder>.Filter.Regex(a => a.AccountNumber, filterValue)
+                );
+
+                var results = await _accountsCollection.Find(filter)
+                    .Limit(10) 
+                    .ToListAsync();
+
+                return Ok(results);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "Error searching accounts", error = ex.Message });
+            }
+        }
+
     }
 }

@@ -23,6 +23,33 @@ namespace IdentityService.Controllers
             _gridFs = new GridFSBucket(context.Database);
         }
 
+        [HttpGet("getAllAccounts")]
+        public async Task<IActionResult> GetAllAccounts()
+        {
+            try
+            {
+                var accounts = await _accountsCollection.Find(_ => true).ToListAsync();
+
+                var response = accounts.Select(a => new {
+                    a.Id,
+                    a.FullName,
+                    a.AccountNumber,
+                    a.CreatedAt
+                });
+
+                return Ok(response);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    message = "An error occurred while fetching account holders.",
+                    error = ex.Message
+                });
+            }
+        }
+
+
         [HttpPost("{username}/signatures")]
         public async Task<IActionResult> UploadSignatures(string username, [FromBody] List<string> base64Signatures)
         {
@@ -73,25 +100,29 @@ namespace IdentityService.Controllers
         [HttpPost]
         public async Task<IActionResult> RegisterAccountHolder([FromBody] AccountRegistrationDto request)
         {
-            if (string.IsNullOrEmpty(request.SignatureBase64))
-                return BadRequest(new { message = "Signature image is required." });
+            if (request.Signatures == null || request.Signatures.Count != 3)
+                return BadRequest(new { message = "Exactly 3 signature samples are required." });
 
             try
             {
-                string cleanB64 = request.SignatureBase64.Contains(",")
-                    ? request.SignatureBase64.Split(',')[1]
-                    : request.SignatureBase64;
+                var fileIds = new List<string>();
 
-                byte[] imageBytes = Convert.FromBase64String(cleanB64);
+                foreach (var b64 in request.Signatures)
+                {
+                    string cleanB64 = b64.Contains(",") ? b64.Split(',')[1] : b64;
+                    byte[] imageBytes = Convert.FromBase64String(cleanB64);
 
-                var fileName = $"{request.AccountNumber}_reference_sheet.png";
-                var fileId = await _gridFs.UploadFromBytesAsync(fileName, imageBytes);
+                    var fileName = $"{request.AccountNumber}_ref_{Guid.NewGuid()}.png";
+                    var fileId = await _gridFs.UploadFromBytesAsync(fileName, imageBytes);
+
+                    fileIds.Add(fileId.ToString());
+                }
 
                 var newAccount = new AccountHolder
                 {
                     FullName = request.FullName,
                     AccountNumber = request.AccountNumber,
-                    ReferenceSignatureId = fileId.ToString(),
+                    ReferenceSignatureIds = fileIds,
                     CreatedAt = DateTime.UtcNow
                 };
 
@@ -99,7 +130,7 @@ namespace IdentityService.Controllers
 
                 return Ok(new
                 {
-                    message = "Account Holder and signature sheet registered successfully.",
+                    message = "Account Holder and 3 reference signatures registered successfully.",
                     accountId = newAccount.Id
                 });
             }

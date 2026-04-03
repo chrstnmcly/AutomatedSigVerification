@@ -10,8 +10,7 @@ namespace SharedLibrary.Models
         public string? Id { get; set; }
         public string AccountNumber { get; set; } = string.Empty;
         public string FullName { get; set; } = string.Empty;
-        public string ReferenceSignatureId { get; set; } = string.Empty;
-
+        public List<string> ReferenceSignatureIds { get; set; } = new();
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
         public GraphologyFeatures? Graphology { get; set; }

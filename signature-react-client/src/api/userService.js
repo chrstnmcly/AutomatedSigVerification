@@ -39,5 +39,25 @@ export const userService = {
         } catch (error) {
             throw error.response?.data?.message || `Failed to update status for ${username}`;
         }
+    },
+
+    //get all customer accounts
+    getAllAccounts: async () => {
+        try {
+            const response = await authApi.get('/api/signature/getAllAccounts');
+            return response.data;
+        } catch (error) {
+            throw error.response?.data?.message || "Failed to fetch account holders";
+        }
+    },
+
+    //search account holders
+    searchAccountHolders: async (query) => {
+        try {
+            const response = await authApi.get(`/api/users/search?query=${query}`);
+            return response.data;
+        } catch (error) {
+            throw error.response?.data?.message || "Search failed";
+        }
     }
 };

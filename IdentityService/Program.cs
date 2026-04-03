@@ -1,7 +1,8 @@
+using IdentityService.Data;
+using IdentityService.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
-using IdentityService.Data;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -10,9 +11,15 @@ builder.Services.AddSingleton<MongoDbContext>();
 var jwtSettings = builder.Configuration.GetSection("JwtSettings");
 var key = Encoding.ASCII.GetBytes(jwtSettings.GetValue<string>("Secret")!);
 
+builder.Services.AddHttpClient("SignatureAI", client => {
+    client.BaseAddress = new Uri("http://localhost:8000/");
+});
+
+builder.Services.AddScoped<IAIService, SignatureAIService>();
+
 builder.Services.AddCors(options => {
     options.AddPolicy("AllowReact", policy =>
-        policy.WithOrigins("http://localhost:5173") // Your Vite Port
+        policy.WithOrigins("http://localhost:5173") // Frontend Port
               .AllowAnyHeader()
               .AllowAnyMethod());
 });

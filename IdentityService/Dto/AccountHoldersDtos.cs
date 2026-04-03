@@ -3,7 +3,7 @@
     public record AccountRegistrationDto(
         string FullName,
         string AccountNumber,
-        string SignatureBase64 
+        List<string> Signatures 
     );
 
     public record AccountResponseDto(
